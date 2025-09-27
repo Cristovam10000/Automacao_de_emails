@@ -34,7 +34,7 @@ _llm = ChatGoogleGenerativeAI(
 
 _triagem_chain = _llm.with_structured_output(EmailOut)
 
-def classify_and_repy(text: str) -> EmailOut:
+def classify_and_reply(text: str) -> EmailOut:
     out: EmailOut = _triagem_chain.invoke([
         SystemMessage(content = TRIAGEM_PROMPT),
         HumanMessage(content = text)
