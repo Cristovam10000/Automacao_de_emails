@@ -1,12 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
 from app.providers.gemini_client import classify_and_reply
 from app.config import settings
 from app.utils.pdf import pdf_to_text
 
 router = APIRouter()
 
-class ProcessReq(BaseModel):
+class ProcessReq(BaseSettings):
     text: str = Field(..., min_length = 3, max_length = settings.MAX_TEXT_CHARS)
     filename: str | None = None
 
