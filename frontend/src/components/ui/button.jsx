@@ -13,6 +13,7 @@ const sizes = {
   lg: "h-12 px-6 text-base",
 };
 
+// eslint-disable-next-line no-unused-vars
 export function Button({ as: Comp = "button", className = "", variant = "default", size = "md", ...props }) {
   const cls = [
     "inline-flex items-center justify-center rounded-lg font-medium transition-all disabled:opacity-50 disabled:pointer-events-none focus:outline-none",
