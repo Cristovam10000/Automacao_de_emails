@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { ArrowLeft, Filter, Download, Trash2, History as HistoryIcon } from 'lucide-react';
 import { EmailClassification } from '@/entities/EmailClassification';
@@ -127,7 +128,7 @@ export default function History() {
             </Button>
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-                Historico de Classificacoes
+                Historico de Classificacões
               </h1>
               <p className="text-slate-600 mt-1">Visualize todos os emails processados e suas classificacoes</p>
             </div>

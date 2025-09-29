@@ -4,6 +4,7 @@ from pydantic import Field
 from app.providers.gemini_client import classify_and_reply
 from app.config import settings
 from app.utils.pdf import pdf_to_text
+from app.utils.nlp import preprocess_text
 
 router = APIRouter()
 
@@ -17,7 +18,8 @@ def health():
 
 @router.post("/process")
 def process(req: ProcessReq):
-    out = classify_and_reply(req.text)
+    clean = preprocess_text(req.text)
+    out = classify_and_reply(clean)
     return {
         "classification": {"label": out.label, "confidence": out.confidence},
         "reply": {"subject": out.reply_subject, "body": out.reply_body[:settings.MAX_REPLY_CHARS]},
