@@ -1,5 +1,4 @@
 ﻿import React, { useState } from 'react';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,7 +51,11 @@ export default function ProcessEmails() {
       });
     } catch (processingError) {
       console.error('Erro ao processar email:', processingError);
-      setError('Erro ao processar o email. Verifique se o backend está ativo e tente novamente.');
+      const mensagem =
+        typeof processingError?.message === 'string' && processingError.message.trim().length
+          ? processingError.message
+          : 'Erro ao processar o email.';
+      setError(mensagem);
     } finally {
       setIsProcessing(false);
     }
@@ -101,7 +104,7 @@ export default function ProcessEmails() {
     } catch (uploadError) {
       console.error('Erro ao processar arquivo:', uploadError);
       const message = uploadError?.message || 'Erro ao processar o arquivo.';
-      setError(`${message} Verifique se o backend está ativo e tente novamente.`);
+      setError(message);
     } finally {
       setIsProcessing(false);
     }
@@ -132,14 +135,14 @@ export default function ProcessEmails() {
             </Button>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-                Classificação de Emails
+                Classificacao de Emails
               </h1>
-              <p className="text-slate-600 mt-1">Sistema inteligente de análise e classificação automática</p>
+              <p className="text-slate-600 mt-1">Sistema inteligente de analise e classificacao automatica</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-4 py-2 rounded-lg w-fit">
-            <Sparkles className="w-4 h-4" /> Powered by AI • Classificação automática em tempo real
+            <Sparkles className="w-4 h-4" /> Powered by AI • Classificacao automatica em tempo real
           </div>
         </motion.div>
 
