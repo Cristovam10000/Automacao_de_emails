@@ -42,7 +42,7 @@ export default function StatCard({ title, value, icon: Icon, color = 'slate', tr
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
       <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-        <CardContent className="p-6">
+        <CardContent className="pt-5">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <p className="text-sm font-medium text-slate-500 mb-2">{title}</p>

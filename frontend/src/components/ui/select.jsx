@@ -15,8 +15,10 @@ export function Select({ value, onValueChange, children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [labels, setLabels] = useState(new Map());
 
-  useEffect(() => {
-    setLabels((prev) => new Map(prev));
+  useEffect(
+    () => {
+    setLabels((prev) => new Map(prev)
+  );
   }, [value]);
 
   const contextValue = useMemo(
