@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckCircle2, XCircle, Eye, FileText, Type } from 'lucide-react';
+import { CheckCircle2, XCircle, Eye, FileText, Type, Trash2 } from 'lucide-react';
 
 function formatDate(value) {
   try {
@@ -20,7 +20,7 @@ function formatDate(value) {
   }
 }
 
-export default function HistoryTable({ emails = [], isLoading }) {
+export default function HistoryTable({ emails = [], isLoading, onDelete }) {
   if (isLoading) {
     return (
       <Card>
@@ -115,44 +115,56 @@ export default function HistoryTable({ emails = [], isLoading }) {
                       <div className="text-sm text-slate-600">{email.processing_time}ms</div>
                     </TableCell>
                     <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-1" /> Ver
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Detalhes da Classificação</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <label className="text-sm font-medium text-slate-600">Conteúdo Original</label>
-                              <div className="mt-1 p-3 bg-slate-50 rounded-lg text-sm max-h-32 overflow-y-auto">
-                                {email.content}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-slate-600">Resposta Sugerida</label>
-                              <div className="mt-1 p-3 bg-blue-50 rounded-lg text-sm">
-                                {email.suggested_response}
-                              </div>
-                            </div>
-                            {Array.isArray(email.keywords_extracted) && email.keywords_extracted.length > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4 mr-1" /> Ver
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>Detalhes da Classificação</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
                               <div>
-                                <label className="text-sm font-medium text-slate-600">Palavras-chave</label>
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                  {email.keywords_extracted.map((keyword, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs">
-                                      {keyword}
-                                    </Badge>
-                                  ))}
+                                <label className="text-sm font-medium text-slate-600">Conteúdo Original</label>
+                                <div className="mt-1 p-3 bg-slate-50 rounded-lg text-sm max-h-32 overflow-y-auto">
+                                  {email.content}
                                 </div>
                               </div>
-                            ) : null}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                              <div>
+                                <label className="text-sm font-medium text-slate-600">Resposta Sugerida</label>
+                                <div className="mt-1 p-3 bg-blue-50 rounded-lg text-sm">
+                                  {email.suggested_response}
+                                </div>
+                              </div>
+                              {Array.isArray(email.keywords_extracted) && email.keywords_extracted.length > 0 ? (
+                                <div>
+                                  <label className="text-sm font-medium text-slate-600">Palavras-chave</label>
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {email.keywords_extracted.map((keyword, index) => (
+                                      <Badge key={index} variant="outline" className="text-xs">
+                                        {keyword}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+
+                        {typeof onDelete === 'function' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onDelete(email.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Excluir
+                          </Button>
+                        ) : null}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

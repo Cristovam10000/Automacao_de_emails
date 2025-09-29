@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
-// eslint-disable-next-line no-unused-vars
-import { motion } from 'framer-motion';
+
+
 import { ArrowLeft, Filter, Download, Trash2, History as HistoryIcon } from 'lucide-react';
 import { EmailClassification } from '@/entities/EmailClassification';
 import { Button } from '@/components/ui/button';
@@ -116,7 +116,7 @@ export default function History() {
   return (
     <div className="p-6 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-4 mb-4">
             <Button
               variant="outline"
@@ -151,9 +151,9 @@ export default function History() {
               </Button>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6">
+        <div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6">
           <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-6">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
@@ -179,14 +179,15 @@ export default function History() {
               <div className="text-sm text-slate-500 ml-auto">{filteredEmails.length} de {emails.length} registros</div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <HistoryTable emails={filteredEmails} isLoading={isLoading} onDelete={handleDeleteEmail} />
-        </motion.div>
+         
+        </div>
 
         {!isLoading && filteredEmails.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-center py-12">
+          <div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-center py-12">
             <HistoryIcon className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-600 mb-2">
               {emails.length === 0 ? 'Nenhum email processado ainda' : 'Nenhum resultado encontrado'}
@@ -196,7 +197,7 @@ export default function History() {
                 ? 'Comece processando alguns emails para ver o historico aqui'
                 : 'Tente ajustar os filtros ou termos de busca'}
             </p>
-          </motion.div>
+          </div>
         ) : null}
       </div>
     </div>
