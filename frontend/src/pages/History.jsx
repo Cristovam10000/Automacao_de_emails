@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Filter, Download, History as HistoryIcon } from 'lucide-react';
+import { ArrowLeft, Filter, Download, Trash2, History as HistoryIcon } from 'lucide-react';
 import { EmailClassification } from '@/entities/EmailClassification';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +13,18 @@ export default function History() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('todos');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const loadEmails = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await EmailClassification.list('-created_date');
+      setEmails(data);
+    } catch (error) {
+      console.error('Erro ao carregar historico:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const applyFilters = useCallback(() => {
     let result = emails;
@@ -34,24 +46,42 @@ export default function History() {
   }, [emails, filter, searchTerm]);
 
   useEffect(() => {
-    const loadEmails = async () => {
-      setIsLoading(true);
-      try {
-        const data = await EmailClassification.list('-created_date');
-        setEmails(data);
-      } catch (error) {
-        console.error('Erro ao carregar histórico:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadEmails();
-  }, []);
+  }, [loadEmails]);
 
   useEffect(() => {
     applyFilters();
   }, [applyFilters]);
+
+  const handleDeleteEmail = useCallback(
+    async (id) => {
+      if (!id) return;
+      const confirmed = window.confirm('Remover este registro do historico?');
+      if (!confirmed) return;
+      try {
+        await EmailClassification.remove(id);
+        await loadEmails();
+      } catch (error) {
+        console.error('Erro ao remover registro do historico:', error);
+      }
+    },
+    [loadEmails],
+  );
+
+  const handleClearHistory = useCallback(
+    async () => {
+      if (!emails.length) return;
+      const confirmed = window.confirm('Limpar todo o historico de classificacoes?');
+      if (!confirmed) return;
+      try {
+        await EmailClassification.clear();
+        await loadEmails();
+      } catch (error) {
+        console.error('Erro ao limpar historico:', error);
+      }
+    },
+    [emails.length, loadEmails],
+  );
 
   const exportToCSV = () => {
     if (!filteredEmails.length) return;
@@ -59,10 +89,10 @@ export default function History() {
     const csvRows = filteredEmails.map((email) => ({
       'Data/Hora': new Date(email.created_date).toLocaleString('pt-BR'),
       Origem: email.file_name || 'Texto direto',
-      Classificação: email.classification,
-      Confiança: `${Math.round(Number(email.confidence_score ?? 0) * 100)}%`,
+      'Classificacao': email.classification,
+      'Confianca': `${Math.round(Number(email.confidence_score ?? 0) * 100)}%`,
       'Tempo (ms)': email.processing_time,
-      Conteúdo: `${(email.content || '').replace(/"/g, '""').slice(0, 200)}...`,
+      'Conteudo': `${(email.content || '').replace(/"/g, '""').slice(0, 200)}...`,
     }));
 
     const headers = Object.keys(csvRows[0]);
@@ -97,18 +127,28 @@ export default function History() {
             </Button>
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-                Histórico de Classificações
+                Historico de Classificacoes
               </h1>
-              <p className="text-slate-600 mt-1">Visualize todos os emails processados e suas classificações</p>
+              <p className="text-slate-600 mt-1">Visualize todos os emails processados e suas classificacoes</p>
             </div>
-            <Button
-              onClick={exportToCSV}
-              variant="outline"
-              className="flex items-center gap-2"
-              disabled={filteredEmails.length === 0}
-            >
-              <Download className="w-4 h-4" /> Exportar CSV
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleClearHistory}
+                variant="outline"
+                className="flex items-center gap-2"
+                disabled={emails.length === 0 || isLoading}
+              >
+                <Trash2 className="w-4 h-4" /> Limpar Historico
+              </Button>
+              <Button
+                onClick={exportToCSV}
+                variant="outline"
+                className="flex items-center gap-2"
+                disabled={filteredEmails.length === 0}
+              >
+                <Download className="w-4 h-4" /> Exportar CSV
+              </Button>
+            </div>
           </div>
         </motion.div>
 
@@ -121,16 +161,16 @@ export default function History() {
               </div>
               <Select value={filter} onValueChange={setFilter}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Classificação" />
+                  <SelectValue placeholder="Classificacao" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">Todas as classificações</SelectItem>
+                  <SelectItem value="todos">Todas as classificacoes</SelectItem>
                   <SelectItem value="produtivo">Apenas Produtivos</SelectItem>
                   <SelectItem value="improdutivo">Apenas Improdutivos</SelectItem>
                 </SelectContent>
               </Select>
               <Input
-                placeholder="Buscar no conteúdo..."
+                placeholder="Buscar no conteudo..."
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 className="w-64"
@@ -141,7 +181,7 @@ export default function History() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <HistoryTable emails={filteredEmails} isLoading={isLoading} />
+          <HistoryTable emails={filteredEmails} isLoading={isLoading} onDelete={handleDeleteEmail} />
         </motion.div>
 
         {!isLoading && filteredEmails.length === 0 ? (
@@ -152,7 +192,7 @@ export default function History() {
             </h3>
             <p className="text-slate-500">
               {emails.length === 0
-                ? 'Comece processando alguns emails para ver o histórico aqui'
+                ? 'Comece processando alguns emails para ver o historico aqui'
                 : 'Tente ajustar os filtros ou termos de busca'}
             </p>
           </motion.div>

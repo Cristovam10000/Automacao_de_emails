@@ -82,4 +82,15 @@ export const EmailClassification = {
   async clear() {
     saveRecords([]);
   },
+
+  async remove(id) {
+    if (!id) return false;
+    const records = loadRecords();
+    const updated = records.filter((item) => item.id !== id);
+    if (updated.length === records.length) {
+      return false;
+    }
+    saveRecords(updated);
+    return true;
+  },
 };
