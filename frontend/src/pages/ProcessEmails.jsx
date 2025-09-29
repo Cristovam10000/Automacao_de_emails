@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,9 @@ import EmailUploadZone from '@/components/process/EmailUploadZone';
 import ClassificationResult from '@/components/process/ClassificationResult';
 import { EmailClassification } from '@/entities/EmailClassification';
 import { InvokeLLM } from '@/integrations/Core';
+import { EmailClassifierHttpService } from '@/infrastructure/http/EmailClassifierHttpService';
+
+const httpService = new EmailClassifierHttpService();
 
 async function readFileAsText(file) {
   return new Promise((resolve, reject) => {
@@ -48,7 +52,7 @@ export default function ProcessEmails() {
       });
     } catch (processingError) {
       console.error('Erro ao processar email:', processingError);
-      setError('Erro ao processar o email. Tente novamente.');
+      setError('Erro ao processar o email. Verifique se o backend está ativo e tente novamente.');
     } finally {
       setIsProcessing(false);
     }
@@ -57,26 +61,48 @@ export default function ProcessEmails() {
   const handleFileSelect = async (file) => {
     if (!file) return;
 
-    setError(null);
     setIsProcessing(true);
+    setError(null);
 
     try {
       const extension = (file.name?.split('.').pop() || '').toLowerCase();
-      if (extension === 'pdf') {
-        throw new Error('pdf-not-supported-offline');
+      if (extension !== 'pdf') {
+        const text = await readFileAsText(file);
+        await processTextContent(text, file.name);
+        return;
       }
 
-      const text = await readFileAsText(file);
-      await processTextContent(text, file.name);
-    } catch (fileError) {
-      if (fileError?.message === 'pdf-not-supported-offline') {
-        setError('A classificação de PDFs exige o backend ativo. Converta o arquivo para .txt ou cole o conteúdo do email.');
-      } else if (fileError?.message === 'file-read-error') {
-        setError('Não foi possível ler o arquivo selecionado.');
-      } else {
-        console.error('Erro ao processar arquivo:', fileError);
-        setError('Erro ao processar o arquivo. Verifique o formato e tente novamente.');
-      }
+      const startTime = performance.now();
+      const apiResponse = await httpService.uploadFile(file);
+      const processingTime = Math.round(performance.now() - startTime);
+
+      const classificationLabel = apiResponse?.classification?.label ?? 'Improdutivo';
+      const classification = classificationLabel.toLowerCase() === 'produtivo' ? 'produtivo' : 'improdutivo';
+      const confidence = Number(apiResponse?.classification?.confidence ?? 0);
+
+      const savedEmail = await EmailClassification.create({
+        content: `Arquivo enviado: ${file.name}`,
+        classification,
+        confidence_score: confidence,
+        suggested_response: apiResponse?.reply?.body ?? '',
+        processing_time: processingTime,
+        file_name: file.name,
+        keywords_extracted: [],
+      });
+
+      setResult({
+        classification,
+        confidence_score: confidence,
+        suggested_response: apiResponse?.reply?.body ?? '',
+        keywords_extracted: [],
+        processing_time: processingTime,
+        id: savedEmail.id,
+      });
+    } catch (uploadError) {
+      console.error('Erro ao processar arquivo:', uploadError);
+      const message = uploadError?.message || 'Erro ao processar o arquivo.';
+      setError(`${message} Verifique se o backend está ativo e tente novamente.`);
+    } finally {
       setIsProcessing(false);
     }
   };
