@@ -38,6 +38,7 @@ def classify_and_reply(text: str) -> EmailOut:
     try:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",
+            api_version="v1",
             temperature=0,
             google_api_key=settings.GOOGLE_API_KEY or None,
         )

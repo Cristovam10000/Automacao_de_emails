@@ -126,7 +126,7 @@ def health_ai():
     if not api_key:
         return {"ok": False, "error": "GOOGLE_API_KEY not set"}
     try:
-        genai.configure(api_key=api_key)
+        genai.configure(api_key=api_key, client_options={"api_version": "v1"})
         model = genai.GenerativeModel("gemini-1.5-flash")
         _ = model.generate_content("ping")
         return {"ok": True}
