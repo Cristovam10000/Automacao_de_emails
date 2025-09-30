@@ -100,17 +100,7 @@ export default function Dashboard() {
             trend={`${improdutividade}% do total`}
             delay={0.2}
           />
-          <StatCard
-            title="Confiança Média"
-            value={isLoading ? '...' : `${stats.avgConfidence.toFixed(1)}%`}
-            icon={Target}
-            color="purple"
-            trend="Precisão do sistema"
-            delay={0.3}
-          />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
             title="Taxa de Produtividade"
             value={isLoading ? '...' : `${produtividade}%`}
@@ -119,6 +109,18 @@ export default function Dashboard() {
             trend="Emails produtivos/total"
             delay={0.4}
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StatCard
+            title="Confiança Média"
+            value={isLoading ? '...' : `${stats.avgConfidence.toFixed(1)}%`}
+            icon={Target}
+            color="purple"
+            trend="Precisão do sistema"
+            delay={0.3}
+          />
+
           <StatCard
             title="Tempo Médio"
             value={isLoading ? '...' : `${stats.avgProcessingTime.toFixed(0)}ms`}
@@ -135,6 +137,49 @@ export default function Dashboard() {
             trend="Performance geral"
             delay={0.6}
           />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <div className="bg-white/90 border border-slate-200/60 rounded-3xl p-8 shadow-lg h-full">
+              <div className="flex items-start gap-4">
+                <div className="p-4 bg-green-100 text-green-600 rounded-2xl">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-slate-800">Produtivo</h2>
+                  <p className="mt-2 text-slate-600">Emails que requerem uma ação ou resposta específica.</p>
+                  <p className="mt-4 text-sm text-slate-500 leading-relaxed">
+                    Exemplos: solicitações de suporte técnico, atualizações sobre casos em aberto e dúvidas sobre o sistema.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <div className="bg-white/90 border border-slate-200/60 rounded-3xl p-8 shadow-lg h-full">
+              <div className="flex items-start gap-4">
+                <div className="p-4 bg-red-100 text-red-600 rounded-2xl">
+                  <XCircle className="w-7 h-7" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-slate-800">Improdutivo</h2>
+                  <p className="mt-2 text-slate-600">Emails que não exigem uma ação imediata.</p>
+                  <p className="mt-4 text-sm text-slate-500 leading-relaxed">
+                    Exemplos: mensagens de felicitações, comunicados informativos ou agradecimentos ocasionais.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
