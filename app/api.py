@@ -118,3 +118,17 @@ def retrain(dados: DadosTreinamento):
         raise HTTPException(status_code=400, detail=str(exc))
 
     return {"status": "modelo_treinado", "quantidade": len(registros)}
+
+@router.get("/health/ai")
+def health_ai():
+    import os, google.generativeai as genai
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        return {"ok": False, "error": "GOOGLE_API_KEY not set"}
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        _ = model.generate_content("ping")
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
