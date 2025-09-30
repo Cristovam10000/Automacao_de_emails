@@ -6,7 +6,7 @@ app = FastAPI(title = "AutoU Mail Assistant (Gemini)")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://automacao-de-emails-f1pz.vercel.app",
+        "automacao-de-emails.vercel.app",
         "https://automacao-de-emails.vercel.app",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
