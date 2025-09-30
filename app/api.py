@@ -1,14 +1,17 @@
+import logging
+
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from pydantic_settings import BaseSettings
 from pydantic import Field, BaseModel
 from typing import List
 
-from app.providers.gemini_client import classify_and_reply
+from app.providers.gemini_client import classify_and_reply, EmailOut
 from app.config import settings
 from app.utils.pdf import pdf_to_text
-from app.utils.fallback_model import train_from_records
+from app.utils.fallback_model import train_from_records, classify_fallback
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class ProcessReq(BaseSettings):
@@ -34,6 +37,36 @@ class DadosTreinamento(BaseModel):
     registros: List[RegistroTreinamento]
 
 
+def _build_response(result: EmailOut, tokens: int, filename: str | None, provider: str) -> dict:
+    return {
+        "classification": {"label": result.label, "confidence": result.confidence},
+        "reply": {
+            "subject": result.reply_subject,
+            "body": result.reply_body[: settings.MAX_REPLY_CHARS],
+        },
+        "meta": {"provider": provider, "filename": filename, "tokens": tokens},
+    }
+
+
+def _classify_with_fallback(raw_text: str, filename: str | None = None) -> dict:
+    text = (raw_text or "").strip()
+    if not text:
+        raise HTTPException(400, "Conteudo vazio apos limpeza.")
+
+    provider = "gemini"
+    tokens = len(text.split())
+
+    try:
+        result = classify_and_reply(text)
+    except Exception as error:  # pragma: no cover - dependent on external API
+        logger.exception("Gemini classification failed; using fallback.")
+        label, confidence, subject, body = classify_fallback(text)
+        result = EmailOut(label=label, confidence=confidence, reply_subject=subject, reply_body=body)
+        provider = "fallback"
+
+    return _build_response(result, tokens, filename, provider)
+
+
 @router.get("/health")
 def health():
     return {"status": "ok"}
@@ -41,13 +74,7 @@ def health():
 
 @router.post("/process")
 def process(req: ProcessReq):
-    text = req.text.strip()
-    out = classify_and_reply(text)
-    return {
-        "classification": {"label": out.label, "confidence": out.confidence},
-        "reply": {"subject": out.reply_subject, "body": out.reply_body[:settings.MAX_REPLY_CHARS]},
-        "meta": {"provider": "gemini", "filename": req.filename, "tokens": len(text.split())},
-    }
+    return _classify_with_fallback(req.text, req.filename)
 
 
 @router.post("/upload")
@@ -66,15 +93,7 @@ async def upload(file: UploadFile = File(None), text: str = Form(None)):
         else:
             raise HTTPException(400, "Formato nao suportado. Use .txt ou .pdf.")
 
-    content = (content or "").strip()
-    if not content:
-        raise HTTPException(400, "Conteudo vazio apos leitura.")
-    out = classify_and_reply(content)
-    return {
-        "classification": {"label": out.label, "confidence": out.confidence},
-        "reply": {"subject": out.reply_subject, "body": out.reply_body[:settings.MAX_REPLY_CHARS]},
-        "meta": {"provider": "gemini", "filename": filename, "tokens": len(content.split())},
-    }
+    return _classify_with_fallback(content, filename)
 
 
 @router.post("/retrain")
