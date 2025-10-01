@@ -1,144 +1,198 @@
+# AutoU Mail Assistant
 
-AutoU Mail Assistant — Classificação Inteligente de Emails
+Este projeto é uma prova de conceito completa para automatizar a leitura, classificação e resposta de e‑mails recebidos por uma grande empresa do setor financeiro. A solução tem como objetivo liberar tempo da equipe de atendimento, triando o alto volume de mensagens automaticamente e oferecendo sugestões de resposta de forma imediata.
 
-Solução web completa para ler, classificar e sugerir respostas de emails (Produtivo | Improdutivo) em um cenário de alto volume no setor financeiro. O objetivo é automatizar a triagem e economizar tempo da equipe, mantendo respostas claras e consistentes.
+## 📨Visao Geral
+O sistema é composto por duas partes principais:
+| Camada            | Tecnologias utilizadas                                                                                                        | Responsabilidades principais                                                                                                                                                                                                                                                                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backend (API)** | Python, FastAPI, [LangChain](https://python.langchain.com/), [Google Gemini 2.5‑Flash](https://ai.google.dev/) e scikit‑learn | • Expor endpoints REST para classificar textos, receber arquivos e treinar o modelo de fallback  \  • Orquestrar chamadas a modelos generativos (Gemini) para classificar os e‑mails e sugerir respostas  \  • Caso a IA generativa falhe ou a chave da API não esteja configurada, utilizar um modelo de fallback baseado em *machine learning* e heurísticas |
+| **Frontend**      | React 19, Vite, Tailwind CSS, Framer Motion, Lucide Icons                                                                     | • Interface amigável para upload de PDFs, arquivos `.txt` ou texto livre  \  • Exibir a categoria (Produtivo/Improdutivo), a confiança e a resposta sugerida  \  • Mostrar estatísticas em tempo real (dashboard) e histórico de classificações, com possibilidade de exportar CSV e treinar o modelo de fallback                                              |
 
-📨 Visão geral
-Camada	Tecnologias	Responsabilidades
-Backend (API)	Python + FastAPI · LangChain · Google Gemini 2.5-Flash · scikit-learn	• Endpoints REST para classificar texto, receber arquivos e treinar o modelo de fallback.
-• Orquestração da IA generativa (Gemini) para classificar e sugerir respostas.
-• Caso a IA falhe ou a chave não esteja configurada, ativa fallback (ML/heurísticas).
-Frontend (Web)	React 19 · Vite · Tailwind CSS · Framer Motion · Lucide Icons	• Upload de PDF / TXT / texto livre.
-• Exibir categoria, confiança e resposta sugerida.
-• Dashboard em tempo real e histórico (exportar CSV, treinar fallback).
-Fluxo resumido
+Uma visão geral do fluxo:
+- **1**: Usuário envia texto ou arquivo (PDF/TXT) pela interface.
+- **2**: O frontend envia a requisição para a API (endpoint /api/process ou /api/upload).
+- **3**: O backend aciona o modelo Gemini 2.5‑Flash via LangChain para classificar e sugerir a resposta. Se houver erro (por exemplo, falta de chave), utiliza‑se o modelo de fallback treinável.
+- **4**: A API retorna um JSON contendo a classificação, a confiança, o assunto e o corpo da resposta sugerida.
+- **5**: O frontend grava a classificação no histórico local (Local Storage), exibe o resultado ao usuário e atualiza o dashboard em tempo real.
 
-Usuário envia texto ou arquivo (PDF/TXT) pela UI.
 
-Frontend chama /api/process (texto) ou /api/upload (arquivo).
-
-Backend aciona Gemini (ou fallback) e devolve JSON com classificação & resposta.
-
-UI salva no LocalStorage, exibe resultado e atualiza dashboard.
-
-🧠 Classificação & geração de respostas
+## 🧠 Classificação e geração de respostas
 Categorias
+O modelo classifica cada email em uma destas categorias:
 
-Produtivo — Solicita ação concreta (suporte, status etc.); resposta neutra solicitando dados complementares.
+**Produtivo** – O email contém uma solicitação ou demanda que requer uma ação concreta (ex.: suporte técnico, atualização de status, dúvida sobre sistema). A resposta automática será educada e neutra, solicitando eventuais informações (número de pedido, contrato, etc.) e indicando os próximos passos.
 
-Improdutivo — Não requer ação (felicitações, agradecimentos); resposta cordial e breve.
+**Improdutivo** – O email não exige ação imediata (ex.: felicitações de aniversário ou natal, comunicados informativos, agradecimentos). A resposta automática agradece o contato e encerra cordialmente.
 
-Modelo principal (Gemini)
-{
+## Modelo principal (Gemini)
+O prompt enviado ao modelo generativo define claramente a tarefa de triagem e inclui critérios de classificação e regras de resposta. O modelo retorna um JSON contendo:
+   ```bash
+   {
   "label": "Produtivo|Improdutivo",
   "confidence": 0.0–1.0,
   "reply_subject": "Assunto sugerido",
   "reply_body": "Mensagem sugerida"
 }
 
-
-Chamadas encapsuladas em app/providers/gemini_client.py; em erro ativa fallback.
+   ```
+Esse JSON é estruturado por meio da integração do LangChain com o Google Generative AI. A função classify_and_reply em app/providers/gemini_client.py encapsula a chamada ao Gemini; em caso de erro, chama‐se automaticamente o fallback
 
 Fallback treinável
+Se a chamada ao modelo Gemini falhar (por exemplo, por falta de internet ou chave da API), a API utiliza um modelo de fallback. Inicialmente, esse fallback é heurístico (palavras‑chave como erro, obrigado, etc.). Entretanto, os usuários podem treinar um classificador de machine learning (Logistic Regression + TF‑IDF) a partir das classificações salvas pelo frontend. Isso é feito via endpoint `/api/retrain`, o qual salva um modelo no arquivo `data/fallback_model.pkl`. Após treinado, o fallback utiliza o modelo de ML para classificar novos e‑mails com base no histórico
 
-Inicialmente heurístico (palavras-chave).
+## 📦 Estrutura do projeto
 
-Endpoint /api/retrain treina TF-IDF + Logistic Regression e salva em data/fallback_model.pkl.
-
-Usado automaticamente se o Gemini falhar.
-
-📦 Estrutura do projeto
+```bash
 Automacao_de_emails/
-├── app/
-│   ├── main.py                # Inicializa FastAPI
-│   ├── api.py                 # /health /process /upload /retrain /health/ai
-│   ├── config.py              # Settings & .env
+├── app/                
+│   ├── main.py         
+│   ├── api.py          
+│   ├── config.py     
 │   ├── providers/
-│   │   └── gemini_client.py   # Integração Gemini
+│   │   └── gemini_client.py  
 │   └── utils/
-│       ├── pdf.py             # PDF → texto
-│       └── fallback_model.py  # Heurística + ML fallback
-├── data/                      # Modelo de fallback treinado
-├── dockerfile                 # Container API
-├── frontend/
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   └── src/ …                 # React + Tailwind (Dashboard, ProcessEmails, History)
-└── requirements.txt
-
-⚙️ Instalação local
-Pré-requisitos
-
-Python 3.11+
-
-Node.js 18+
-
-GOOGLE_API_KEY (Gemini)
-
-1. Clone
-git clone https://github.com/Cristovam10000/Automacao_de_emails.git
-cd Automacao_de_emails
-
-2. Backend
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+│       ├── pdf.py     
+│       └── fallback_model.py  
+├── data/             
+├── main.py            
+├── requirements.txt    
+├── dockerfile          
+├── frontend/           
+│   ├── index.html     
+│   ├── package.json   
+│   ├── vite.config.js  
+│   └── src/
+│       ├── main.jsx       
+│       ├── App.jsx       
+│       ├── Layout.jsx     
+│       ├── pages/
+│       ├── entities/      
+│       ├── integrations/  
+│       └── infrastructure/http/EmailClassifierHttpService.js 
+└── ...
 
 
-Crie .env:
+```
 
-GOOGLE_API_KEY=SEU_TOKEN
-CLASS_THRESHOLD=0.65
-MAX_TEXT_CHARS=20000
-MAX_REPLY_CHARS=1200
+## ⚙️ Configuração e execução local
+### Pré‑requisitos
+- **Python** 3.11 ou superior
+- **Node.js** 18 ou superior (para o frontend)
+- Conta no Google Cloud com acesso ao **Gemini** e geração de **API Key**
 
+### 1. Clonar o repositório
+```bash
+  git clone https://github.com/Cristovam10000/Automacao_de_emails.git
+  cd Automacao_de_emails
 
-Suba:
+```
 
+### 2. Backend
+**1**. Crie um ambiente virtual (opcional, mas recomendado):
+```bash
+  python -m venv .venv
+  source .venv/bin/activate  # no Windows use .venv\Scripts\activate
+
+```
+
+**2**. Instale as dependências: 
+```bash
+  pip install --upgrade pip
+  pip install -r requirements.txt
+
+```
+
+**3**. Configure as variáveis de ambiente: 
+      Crie um arquivo `.env` na raiz do projeto ou exporte as variáveis no terminal:
+```bash
+  # Chave de API do Google Generative AI (obrigatória para o modelo principal)
+  GOOGLE_API_KEY=SEU_TOKEN_DA_API
+
+  # (opcional) Ajuste o número máximo de caracteres analisados e tamanho da resposta
+  CLASS_THRESHOLD=0.65
+  MAX_TEXT_CHARS=20000 
+  MAX_REPLY_CHARS=1200
+
+```
+
+**4**. Inicie o servidor de desenvolvimento:
+```bash
 uvicorn main:app --reload --port 8000
-# Docs: http://localhost:8000/docs
 
-3. Frontend
+```
+Isso disponibilizará a API em `http://localhost:8000/`. Os endpoints principais são:
+
+| Método & rota          | Descrição                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **GET /api/health**    | Verifica se a API está no ar (retorna `{"status": "ok"}`)                                                        |
+| **POST /api/process**  | Recebe `{ "text": "..." }` e retorna classificação/ resposta                                                     |
+| **POST /api/upload**   | Recebe arquivo `pdf` ou `txt` via multipart/form-data e retorna classificação                                    |
+| **POST /api/retrain**  | Envia registros para treinar o fallback; requer JSON com `registros: [ { conteudo, classificacao, confianca } ]` |
+| **GET /api/health/ai** | Checa a integração com o Gemini (retorna `ok` ou erro)                  
+
+### 3. Frontend
+**1**. Entre na pasta do frontend:
+```bash
 cd frontend
+
+```
+
+**2**. Instale as dependências: 
+```bash
 npm install
-# opcional: export VITE_API_BASE="https://sua-api.onrender.com/api"
-npm run dev
 
+```
 
-UI em http://localhost:5173
+**3**. Defina a variável de ambiente VITE_API_BASE (opcional). Por padrão, a aplicação detecta o backend local quando executada em `localhost:5173`, usando `http://localhost:8000/api`. Em ambientes de produção (por exemplo, Vercel ou Render) define‑se esta variável para apontar para sua API pública:
+```bash
+  # em sistemas Unix
+export VITE_API_BASE="https://sua-api-exemplo.onrender.com/api"
+# ou crie um arquivo .env.local com VITE_API_BASE=https://...
 
-🧩 Endpoints principais
-Método	Rota	Descrição
-GET	/api/health	Status da API
-GET	/api/health/ai	Status integração Gemini
-POST	/api/process	{ "text": "..." }
-POST	/api/upload	Multipart file (pdf/txt)
-POST	/api/retrain	Treina fallback com registros
-🐳 Docker rápido
-docker build -t automacao_emails_api .
-docker run -e GOOGLE_API_KEY=SEU_TOKEN -p 10000:10000 automacao_emails_api
+```
 
-🚀 Deploy
+**4**. Inicie o servidor de desenvolvimento:
+```bash
+ npm run dev
 
-Backend — Render/Heroku/Docker.
+```
+A interface estará disponível em `http://localhost:5173/`. Abra no navegador e navegue entre as páginas:
+- **Dashboard** – mostra o total de e‑mails processados, quantidade de produtivos e improdutivos, confiança média e tempo médio de processamento.
+- **Processar Emails** – permite colar texto ou fazer upload de arquivos `.txt`/`.pdf`. Ao processar, exibe a classificação, a confiança e a resposta sugerida. O resultado é salvo no histórico local.
+- **Histórico** – lista todas as classificações realizadas no navegador. É possível filtrar por categoria, buscar por palavras, exportar para CSV, remover registros, limpar tudo ou treinar o modelo de fallback a partir dos dados coletados.
 
-Frontend — Vercel/Netlify (npm run build).
+## 🧪 Testando a aplicação
+Para facilitar a experimentação, seguem alguns exemplos de entrada:
 
-Defina VITE_API_BASE=https://SEU_BACKEND/api.
+**1**. **Email produtivo** (solicitação de suporte):
+Assunto: “Problemas de acesso ao sistema” \
+Corpo: “Olá, não consigo acessar o módulo financeiro, aparece um erro 503. Podem verificar?”
+O sistema deve classificar como Produtivo e sugerir uma resposta solicitando detalhes (número de pedido, prints da tela etc.).
 
-🧪 Teste rápido
+**2**. **Email improdutivo** (agradecimento):
+“Bom dia! Apenas queria agradecer pelo suporte ontem. Tudo resolvido.”
+O sistema deve classificar como Improdutivo e retornar uma resposta curta de agradecimento.
 
-Produtivo: “Erro 503 no módulo financeiro” → Produtivo + resposta pedindo detalhes.
+**3**. **Treinando o fallback**: Após processar vários emails no histórico, clique em Treinar IA na página de histórico. Caso haja pelo menos duas classes distintas, a API treinará um modelo de regressão logística e salvará em `data/fallback_model.pkl`.
+. A partir de então, se o Gemini falhar, a API utilizará esse modelo automaticamente.
 
-Improdutivo: “Obrigado pelo suporte!” → Improdutivo + resposta cordial.
+## 🗂 Material extra
 
-Treinar fallback: após vários registros, clique Treinar IA no Histórico.
+- **Vídeo demonstrativo (3–5 minutos)** – apresente brevemente o problema, mostre a interface processando e‑mails, comente a arquitetura e conclua com aprendizados. Publique em YouTube (modo não listado) e inclua o link no formulário.
 
-✅ Checklist de entrega
-✔️	Item
-Código organizado (backend / frontend)	
-README completo & claro	
-IA classifica corretamente + sugere resposta	
-Interface intuitiva (dashboard, upload, histórico)	
-Instruções de Deploy / Variáveis de ambiente	
-Vídeo 3-5 min & links no formulário	
+- **.csv de exemplo** – para testar o treinamento do fallback, exporte o histórico de classificações via interface e importe no backend utilizando o endpoint `/api/retrain` ou a interface de histórico.
+
+- **Documentação da API** – por ser uma API FastAPI, você pode acessar a documentação interativa no endereço `/docs` após iniciar o backend (`http://localhost:8000/docs`).
+
+## ✅ Checklist de entrega
+Para garantir que sua submissão atenda aos critérios do desafio, verifique:
+| Item                       | Descrição                                                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| ✔️ Código fonte organizado | Diretórios `app/` (backend) e `frontend/` estruturados, dependências listadas em `requirements.txt` e `package.json` |
+| ✔️ Instruções claras       | Este README explica como instalar, configurar e rodar a aplicação localmente, além de sugestões de deploy            |
+| ✔️ Classificação correta   | O modelo distingue entre emails produtivos e improdutivos conforme os critérios fornecidos                           |
+| ✔️ Sugestões de resposta   | A API retorna assunto e corpo da resposta automática em PT‑BR                                                        |
+| ✔️ Interface intuitiva     | Frontend responsivo com dashboard, upload e histórico, incluindo exportação CSV e treinamento do fallback            |
+| ✔️ Hospedagem              | Instruções para publicar a solução em nuvem e configurar variáveis de ambiente                                       |
+| ✔️ Vídeo e formulário      | Grave um vídeo demonstrativo e preencha o formulário de entrega com os links necessários                             |
