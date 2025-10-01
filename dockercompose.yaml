@@ -1,0 +1,13 @@
+# docker-compose.yml
+version: "3.9"   # opcional no Compose v2, mas não atrapalha
+
+services:
+  api:
+    build: .
+    container_name: fastapi_app
+    ports:
+      - "10000:10000"          # host:container
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    restart: unless-stopped
