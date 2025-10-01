@@ -37,6 +37,7 @@ export class EmailClassifierHttpService {
       data = payloadText ? JSON.parse(payloadText) : null;
     } catch (error) {
       // Conteudo nao era JSON, segue com texto puro
+      print(error)
     }
     if (!r.ok) {
       const detail = data && typeof data === 'object' ? data.detail ?? payloadText : payloadText;
