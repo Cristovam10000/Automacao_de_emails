@@ -185,14 +185,5 @@ O sistema deve classificar como Improdutivo e retornar uma resposta curta de agr
 
 - **Documentação da API** – por ser uma API FastAPI, você pode acessar a documentação interativa no endereço `/docs` após iniciar o backend (`http://localhost:8000/docs`).
 
-## ✅ Checklist de entrega
-Para garantir que sua submissão atenda aos critérios do desafio, verifique:
-| Item                       | Descrição                                                                                                            |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| ✔️ Código fonte organizado | Diretórios `app/` (backend) e `frontend/` estruturados, dependências listadas em `requirements.txt` e `package.json` |
-| ✔️ Instruções claras       | Este README explica como instalar, configurar e rodar a aplicação localmente, além de sugestões de deploy            |
-| ✔️ Classificação correta   | O modelo distingue entre emails produtivos e improdutivos conforme os critérios fornecidos                           |
-| ✔️ Sugestões de resposta   | A API retorna assunto e corpo da resposta automática em PT‑BR                                                        |
-| ✔️ Interface intuitiva     | Frontend responsivo com dashboard, upload e histórico, incluindo exportação CSV e treinamento do fallback            |
 | ✔️ Hospedagem              | Instruções para publicar a solução em nuvem e configurar variáveis de ambiente                                       |
 | ✔️ Vídeo e formulário      | Grave um vídeo demonstrativo e preencha o formulário de entrega com os links necessários                             |
