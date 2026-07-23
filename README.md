@@ -177,13 +177,3 @@ O sistema deve classificar como Improdutivo e retornar uma resposta curta de agr
 **3**. **Treinando o fallback**: Após processar vários emails no histórico, clique em Treinar IA na página de histórico. Caso haja pelo menos duas classes distintas, a API treinará um modelo de regressão logística e salvará em `data/fallback_model.pkl`.
 . A partir de então, se o Gemini falhar, a API utilizará esse modelo automaticamente.
 
-## 🗂 Material extra
-
-- **Vídeo demonstrativo (3–5 minutos)** – apresente brevemente o problema, mostre a interface processando e‑mails, comente a arquitetura e conclua com aprendizados. Publique em YouTube (modo não listado) e inclua o link no formulário.
-
-- **.csv de exemplo** – para testar o treinamento do fallback, exporte o histórico de classificações via interface e importe no backend utilizando o endpoint `/api/retrain` ou a interface de histórico.
-
-- **Documentação da API** – por ser uma API FastAPI, você pode acessar a documentação interativa no endereço `/docs` após iniciar o backend (`http://localhost:8000/docs`).
-
-| ✔️ Hospedagem              | Instruções para publicar a solução em nuvem e configurar variáveis de ambiente                                       |
-| ✔️ Vídeo e formulário      | Grave um vídeo demonstrativo e preencha o formulário de entrega com os links necessários                             |
